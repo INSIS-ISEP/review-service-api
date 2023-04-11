@@ -14,9 +14,8 @@ import { User } from './User';
 import { Vote } from './Vote';
 
 interface IReview {
-  idReview: number;
-  version: number;
-  approvalStatus: string;
+  version?: number;
+  approvalStatus?: string;
   reviewText: string;
   upVote?: Vote[];
   downVote?: Vote[];
@@ -34,7 +33,7 @@ export class Review implements IReview {
   idReview: number;
 
   @VersionColumn()
-  version: number;
+  version: number | undefined;
 
   @Column({ nullable: false })
   approvalStatus: string;
@@ -42,10 +41,10 @@ export class Review implements IReview {
   @Column({ nullable: false })
   reviewText: string;
 
-  @OneToMany((type) => Vote, (vote) => vote.review, { nullable: true })
+  @OneToMany(() => Vote, (vote) => vote.vote, { nullable: true })
   upVote: Vote[];
 
-  @OneToMany((type) => Vote, (vote) => vote.review, { nullable: true })
+  @OneToMany(() => Vote, (vote) => vote.vote, { nullable: true })
   downVote: Vote[];
 
   @Column({ nullable: true })
@@ -57,21 +56,20 @@ export class Review implements IReview {
   @Column({ nullable: false })
   funFact: string;
 
-  @ManyToOne((type) => Product, { nullable: false })
+  @ManyToOne(() => Product, { nullable: false })
   @JoinColumn({ name: 'product_id' })
   product: Product;
 
-  @ManyToOne((type) => User, { nullable: false })
+  @ManyToOne(() => User, { nullable: false })
   @JoinColumn({ name: 'user_id' })
   user: User;
 
-  @OneToOne((type) => Rating, { cascade: true, nullable: true })
+  @OneToOne(() => Rating, { cascade: true, nullable: true })
   rating: Rating;
 
   constructor(review: IReview) {
-    this.idReview = review.idReview;
     this.version = review.version;
-    this.setApprovalStatus(review.approvalStatus);
+    this.setApprovalStatus(review.approvalStatus || 'pending');
     this.setReviewText(review.reviewText);
     this.setPublishingDate(review.publishingDate);
     this.setFunFact(review.funFact);
@@ -80,7 +78,7 @@ export class Review implements IReview {
     this.setReport(review.report || '');
     this.setProduct(review.product);
     this.setUser(review.user);
-    this.setRating(review.rating || Rating);
+    this.setRating(review.rating || new Rating(0.0));
   }
   public getIdReview(): number {
     return this.idReview;
@@ -132,7 +130,7 @@ export class Review implements IReview {
     this.publishingDate = publishingDate;
   }
 
-  public getVersion(): number {
+  public getVersion(): number | undefined {
     return this.version;
   }
 
@@ -162,7 +160,7 @@ export class Review implements IReview {
 
   public getRating(): Rating {
     if (this.rating == null) {
-      //   return new Rating(0.0);
+      return new Rating(0.0);
     }
     return this.rating;
   }
